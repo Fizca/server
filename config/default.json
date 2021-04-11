@@ -5,5 +5,12 @@
         "mongodb": {
             "url": "mongodb://localhost/fizca"
         }
+    },
+    "aws": {
+        "apiVersion": "2006-03-01",
+        "accessKeyId": "",
+        "secretAccessKey": "",
+        "region": "",
+        "bucket_name": ""
     }
 }
