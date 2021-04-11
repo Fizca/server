@@ -3,6 +3,7 @@ require('./services/database');
 const config = require('config');
 const express = require('express');
 
+const assetsRoute = require('./routes/assetsRoute');
 const googleRoute = require('./routes/googleRoute');
 const passport = require('./services/passport');
 
@@ -19,6 +20,7 @@ app.use((req, res, next) => {
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.use('/assets', assetsRoute);
 app.use('/google', googleRoute);
 
 /**

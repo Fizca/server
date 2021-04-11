@@ -112,5 +112,6 @@ dist
 .pnp.*
 
 # Project Ignores
+*.DS_Store
 config/local.json
 uploads/
