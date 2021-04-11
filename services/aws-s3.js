@@ -60,7 +60,7 @@ class AWSS3 {
    * @param {String} asset The asset name to retrieve
    * @returns String signed URL
    */
-  getSingedUrl(asset) {
+  getSignedUrl(asset) {
     const params = {
       Key: asset,
       Bucket: config.aws.bucket_name,

@@ -70,14 +70,14 @@ passport.deserializeUser((id, done) => {
     })
     .catch((err) => {
       console.log('error:', err.message);
-      done(new Error("Failed to deserialize an user"));
+      done(new Error('Failed to deserialize an user'));
     });
 });
 
 passport.isAuthenticated = (req, res, next) => {
   if (!req.user) {
     console.log('Unauthorized request');
-    res.redirect('/');
+    res.sendStatus(403);
     return;
   }
   next();

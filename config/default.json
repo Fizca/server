@@ -16,5 +16,6 @@
         "secretAccessKey": "",
         "region": "",
         "bucket_name": ""
-    }
+    },
+    "cors_whitelist": "http://localhost:3001"
 }

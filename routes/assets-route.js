@@ -1,7 +1,8 @@
-const fs = require('fs');
 const express = require('express');
 const multer = require('multer');
 const AssetHandler = require('../services/asset-handler');
+const S3 = require('../services/aws-s3');
+const Asset = require('../models/asset');
 
 const upload = multer({ dest: 'uploads/' });
 
@@ -32,6 +33,17 @@ router.post('', upload.array('images', MAX_IMAGE_COUNT), async (req, res) => {
       response.failures = values.length;
     });
   res.json(response);
+});
+
+/**
+ * Generate the signed url for S3 bucket for an asset.
+ */
+router.get('/:key', async (req, res) => {
+  const { key } = req.params;
+
+  const image = await S3.getSignedUrl(key);
+
+  res.send(image);
 });
 
 module.exports = router;
