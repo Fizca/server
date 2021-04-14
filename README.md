@@ -31,6 +31,11 @@ Instructions can be found here: https://formulae.brew.sh/formula/node@12
 **brew**
 ```bash
 brew install node@12
+
+# Note: After this, you may need to update your PATH. Keep an eye on the output of brew.
+# Example Output:
+# If you need to have node@12 first in your PATH, run:
+#  echo 'export PATH="/usr/local/opt/node@12/bin:$PATH"' >> ~/.zshrc
 ```
 
 ## Yarn
@@ -58,7 +63,6 @@ In mac you can just install via homebrew:
 brew update
 brew tap mongodb/brew
 brew install mongodb-community
-brew services start mongodb-community
 ```
 
 **Windows**
@@ -85,6 +89,7 @@ https://robomongo.org/download
 ## Install Dependencies
 
 ```bash
+# From within the server directory
 yarn install
 ```
 
@@ -98,13 +103,13 @@ Create a `local.json` file inside the config folder:
         "google": {
             "client_id": "<google client id>",
             "client_secret": "<google client secret>",
-            "callback_url": "http://lvh.me:3001/google/callback"
+            "callback_url": "http://localhost:3001/google/callback"
         }
     }
 }
 ```
 
-Credentials can be found in the [Google App]() (TBD).
+Credentials can be found in the [Google App](https://console.cloud.google.com/apis/credentials).
 
 ## Startup
 
@@ -113,6 +118,7 @@ Credentials can be found in the [Google App]() (TBD).
 Normal startup
 
 ```bash
+brew services start mongodb-community # Run with stop to halt mongodb
 yarn start
 ```
 
@@ -125,3 +131,5 @@ yarn startd
 Application then runs on http://localhost:3001 by default.
 The port can be changed overriding the `local.json` file,
 however, any client will also need to be updated.
+
+To test that things are running correctly, navigate to your [local oath link](localhost:3001/google/oauth) and after you select an account, you should see a log in your yarn console that your account was created.
