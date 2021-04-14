@@ -3,8 +3,8 @@ require('./services/database');
 const config = require('config');
 const express = require('express');
 
-const assetsRoute = require('./routes/assetsRoute');
-const googleRoute = require('./routes/googleRoute');
+const assetsRoute = require('./routes/assets-route');
+const googleRoute = require('./routes/google-route');
 const passport = require('./services/passport');
 
 const app = express();

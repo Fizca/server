@@ -1,7 +1,5 @@
 const config = require('config');
 const AWS = require('aws-sdk');
-const fs = require('fs');
-const Sharp = require('sharp');
 
 /**
  * AWSS3 Example of simple class with basic functionality used to upload
@@ -32,63 +30,27 @@ class AWSS3 {
    * @return
    */
   putObject(buffer, name) {
-    return new Promise((resolve, reject) => {
-      // Response block.
-      const { bucket_name: bucketName, region } = this.awsConfig;
-      const res = {
-        filepath: `https://${bucketName}.s3-${region}.amazonaws.com/${name}`,
-        data: [],
-      };
+    // Response block.
+    const { bucket_name: bucketName, region } = this.awsConfig;
+    const res = {
+      name,
+      filepath: `https://${bucketName}.s3-${region}.amazonaws.com/${name}`,
+      data: [],
+    };
 
-      const params = {
-        Body: buffer,
-        Bucket: this.awsConfig.bucket_name,
-        Key: name,
-      };
+    const params = {
+      Body: buffer,
+      Bucket: this.awsConfig.bucket_name,
+      Key: name,
+    };
 
-      this.s3.putObject(params, (e, d) => {
-        if (e) {
-          reject(e);
-        }
-        res.data.push(d);
-        resolve(res);
-      });
+    return this.s3.putObject(params, (e, d) => {
+      if (e) {
+        throw e;
+      }
+      res.data.push(d);
+      return res;
     });
-  }
-
-  /**
-   * Resize the image using sharp
-   *
-   * @param {string} filepath
-   * @param {object} options
-   * @returns
-   */
-  static Resizer(filepath, options) {
-    const { width, height, fit } = options;
-    return Sharp(filepath)
-      .resize({ width, height, fit })
-      .toBuffer()
-      .then((buffer) => buffer)
-      .catch((e) => {
-        console.log('unable to resize image:', e.message);
-        return false;
-      });
-  }
-
-  /**
-   * Uploads the image to the S3 bucket
-   *
-   * @param {string} filepath The file path
-   * @param {string} name The name for the asset
-   * @returns
-   */
-  async upload(filepath, name) {
-    if (!fs.existsSync(filepath)) {
-      throw new Error(`the file ${filepath} does not exist`);
-    }
-    const buffer = fs.readFileSync(filepath, null);
-    const resized = await AWSS3.Resizer(buffer, { width: 200, height: 200, fit: 'inside' });
-    return this.putObject(resized, name);
   }
 
   /**
@@ -98,15 +60,13 @@ class AWSS3 {
    * @param {String} asset The asset name to retrieve
    * @returns String signed URL
    */
-  async getSingedUrl(asset) {
+  getSingedUrl(asset) {
     const params = {
       Key: asset,
       Bucket: config.aws.bucket_name,
       Expires: 60 * 5,
     };
-    return new Promise((resolve, reject) => {
-      this.s3.getSignedUrl('getObject', params, (err, url) => (err ? reject(err) : resolve(url)));
-    });
+    return this.s3.getSignedUrl('getObject', params);
   }
 }
 
