@@ -6,6 +6,10 @@
             "url": "mongodb://localhost/fizca"
         }
     },
+    "session": {
+        "max_age_millis": 86400000,
+        "secret": "'y?t[_y6^pG6]uK)Sfnr_/J#7QW/96/[kV*7+A!bs>akcvQPdNSMgB5z.vPu&f,g"
+    },
     "aws": {
         "apiVersion": "2006-03-01",
         "accessKeyId": "",
