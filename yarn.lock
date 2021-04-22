@@ -1050,6 +1050,11 @@ events@1.1.1:
   resolved "https://registry.yarnpkg.com/events/-/events-1.1.1.tgz#9ebdb7635ad099c70dcc4c2a1f5004288e8bd924"
   integrity sha1-nr23Y1rQmccNzEwqH1AEKI6L2SQ=
 
+exifr@^6.2.0:
+  version "6.2.0"
+  resolved "https://registry.yarnpkg.com/exifr/-/exifr-6.2.0.tgz#2892ae75b237d2126c48654bed711e5c684ca88c"
+  integrity sha512-ihHjOl8t6NvQUFy6k90axjyj9vJnPIBZpajoF7LjmdA/SYBBLmDSo0YwmnAbwuAtmbL2oBpeqA5wajXqw7x0gg==
+
 expand-template@^2.0.3:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/expand-template/-/expand-template-2.0.3.tgz#6e14b3fcee0f3a6340ecb57d2e8918692052a47c"

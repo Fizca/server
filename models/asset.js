@@ -12,9 +12,24 @@ const assetSchema = new Schema({
   name: {
     type: String,
   },
-  description: {
-    type: String,
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
   },
+  takenAt: {
+    type: Number,
+    default: Date.now(),
+  },
+  metadata: {
+    latitude: {
+      type: Number,
+    },
+    longitude: {
+      type: Number,
+    },
+  },
+}, {
+  timestamps: true,
 });
 
 // Create a model

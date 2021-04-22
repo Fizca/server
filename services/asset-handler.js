@@ -1,7 +1,9 @@
 const crypto = require('crypto');
+const exifr = require('exifr');
 const fs = require('fs');
 const path = require('path');
 const Sharp = require('sharp');
+
 const S3 = require('./aws-s3');
 const Asset = require('../models/asset');
 
@@ -48,25 +50,58 @@ class AssetHandler {
     return S3.putObject(resized, name);
   }
 
-  static async CreateImage(file) {
-    const { originalname, path: filePath } = file;
+  /**
+   * Create new image
+   * @param {Object} fileData
+   * @param {Object} user
+   */
+  static async CreateImage(fileData, user) {
+    const { originalname, path: filepath } = fileData;
+
+    const metadata = await this.ExtractMetadata(filepath);
+
     const original = `${Date.now()}-${originalname}`;
     const hash = crypto.createHash('sha256').update(original).digest('hex');
     const name = `${hash}${path.extname(originalname)}`;
     console.log(`Hashing image for user: ${original} => ${name}`);
 
-    await this.Upload(filePath, name);
-    fs.unlink(filePath, (err) => {
+    await this.Upload(filepath, name);
+    console.log(`Successfully uploaded image: ${name}`);
+
+    fs.unlink(filepath, (err) => {
       if (err) {
-        console.log(`Unable to delete ${filePath}`);
+        console.log(`Unable to delete ${filepath}`);
       }
     });
 
     const asset = new Asset({
       name,
       type: 'image',
+      user,
+      takenAt: metadata.createdAt || Date.now(),
+      metadata: {
+        latitude: metadata.latitude,
+        longitude: metadata.longitude,
+      },
     });
     return asset.save();
+  }
+
+  static async ExtractMetadata(filepath) {
+    const metadata = await exifr.parse(filepath)
+      .catch((error) => {
+        console.log(error);
+        return {};
+      });
+    console.log('original metadata');
+    console.log(metadata);
+
+    return {
+      latitude: metadata.latitude,
+      longitude: metadata.longitude,
+      createdAt: metadata.CreateDate,
+      modifiedAt: metadata.ModifyDate,
+    };
   }
 }
 
