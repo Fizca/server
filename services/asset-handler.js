@@ -7,6 +7,8 @@ const Sharp = require('sharp');
 const S3 = require('./aws-s3');
 const Asset = require('../models/asset');
 
+const MAX_IMAGE_COUNT = 13;
+
 /**
  * AWSS3 Example of simple class with basic functionality used to upload
  * files to Amaozn S3 bucket
@@ -15,6 +17,10 @@ const Asset = require('../models/asset');
  * @since 2018-11-27
  */
 class AssetHandler {
+  static get MaximumImageCount() {
+    return MAX_IMAGE_COUNT;
+  }
+
   /**
    * Resize the image using sharp
    *
@@ -87,14 +93,34 @@ class AssetHandler {
     return asset.save();
   }
 
+  /**
+   * Create multiple images.
+   * @param {Object} file
+   * @param {Object} user
+   */
+  static async CreateMultipleImages(files, user) {
+    // Upload the file and create the asset
+    const promises = await files.map(async (file) => {
+      const asset = await AssetHandler.CreateImage(file, user)
+        .catch((err) => {
+          console.log('Unable to upload image to S3', err.message);
+          return false;
+        });
+      return asset;
+    });
+
+    // Get only the assets that passed.
+    const assets = await Promise.all(promises);
+    return assets.filter((asset) => asset);
+  }
+
   static async ExtractMetadata(filepath) {
     const metadata = await exifr.parse(filepath)
+      .then((data) => data || {})
       .catch((error) => {
         console.log(error);
         return {};
       });
-    console.log('original metadata');
-    console.log(metadata);
 
     return {
       latitude: metadata.latitude,

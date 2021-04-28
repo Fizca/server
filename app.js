@@ -10,6 +10,8 @@ const session = require('express-session');
 const usersRoute = require('./routes/users-route');
 const assetsRoute = require('./routes/assets-route');
 const authRoute = require('./routes/auth-route');
+const momentsRoute = require('./routes/moments-route');
+const profilesRoute = require('./routes/profiles-route');
 
 const app = express();
 const MongoStore = connectMongo(session);
@@ -43,6 +45,8 @@ app.use(express.json());
 
 app.use('/assets', assetsRoute);
 app.use('/auth', authRoute);
+app.use('/moments', momentsRoute);
+app.use('/profiles', profilesRoute);
 app.use('/users', usersRoute);
 
 /**

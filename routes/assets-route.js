@@ -19,23 +19,8 @@ router.post('', isAuthenticated, upload.array('images', MAX_IMAGE_COUNT), async 
   const { files, userId } = req;
   const user = await User.findById(userId);
 
-  const promises = await files.map(async (file) => {
-    await AssetHandler.CreateImage(file, user)
-      .catch((err) => {
-        console.log('Unable to upload image to S3', err.message);
-        return {};
-      });
-  });
-
-  const response = {};
-  await Promise.all(promises)
-    .then(async (values) => {
-      response.success = values.length;
-    })
-    .catch((values) => {
-      response.failures = values.length;
-    });
-  res.json(response);
+  const assets = await AssetHandler.CreateMultipleImages(files, user);
+  res.json(assets);
 });
 
 /**
