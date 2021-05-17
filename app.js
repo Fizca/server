@@ -9,8 +9,7 @@ const session = require('express-session');
 
 const usersRoute = require('./routes/users-route');
 const assetsRoute = require('./routes/assets-route');
-const googleRoute = require('./routes/google-route');
-const passport = require('./services/passport');
+const authRoute = require('./routes/auth-route');
 
 const app = express();
 const MongoStore = connectMongo(session);
@@ -40,27 +39,17 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(passport.initialize());
-app.use(passport.session());
+app.use(express.json());
 
-app.use('/users', usersRoute);
 app.use('/assets', assetsRoute);
-app.use('/google', googleRoute);
+app.use('/auth', authRoute);
+app.use('/users', usersRoute);
 
 /**
  * Routes
  */
 app.get('/', async (req, res) => {
   res.json({ hello: 'world' });
-});
-
-app.get('/logout', async (req, res) => {
-  console.log('Logging out user: ', req.user);
-  req.logout();
-
-  // Update the cookie with a value that's invalid, and to expire right away
-  res.cookie('connect.sid', 'deleted', { expires: new Date(1) });
-  res.redirect('/');
 });
 
 /**

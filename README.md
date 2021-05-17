@@ -12,7 +12,7 @@ Responses should be in JSON format whenever possible.
 
 * Model creation and maintenance: [MongooseJS](https://mongoosejs.com/)
 
-* Auth using Google: [PassportJS](http://www.passportjs.org/)
+* Auth using Google and JWT
 
 * Image manipulation: [Sharp](https://sharp.pixelplumbing.com/)
 
