@@ -73,7 +73,7 @@ class Authentication {
     const token = req.headers.access_token;
 
     // Add the token to the blackball list.
-    const blackball = new Blackball({ id: token });
+    const blackball = new Blackball({ _id: token });
     blackball.save();
     next();
   }
