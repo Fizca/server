@@ -3,6 +3,11 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const userSchema = new Schema({
+  role: {
+    type: 'string',
+    enum: ['none', 'guest', 'contributor', 'admin'],
+    default: 'none',
+  },
   method: {
     type: String,
     enum: ['local', 'google', 'facebook'],
@@ -14,15 +19,12 @@ const userSchema = new Schema({
     },
     email: {
       type: String,
-      lowercase: true,
     },
     displayName: {
       type: String,
-      lowercase: true,
     },
     avatar: {
       type: String,
-      lowercase: true,
     },
   },
 }, {

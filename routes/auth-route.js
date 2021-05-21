@@ -22,7 +22,7 @@ router.post('/google', async (req, res) => {
     });
 
   if (user) {
-    const jwtToken = Authentication.GenerateAccessToken(user.id);
+    const jwtToken = Authentication.GenerateAccessToken(user);
     res.status(201);
     res.json(jwtToken);
   }

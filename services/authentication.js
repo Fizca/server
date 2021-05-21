@@ -5,8 +5,12 @@ const Blackball = require('../models/blackball');
 const User = require('../models/user');
 
 class Authentication {
-  static GenerateAccessToken(userId) {
-    return jwt.sign({ id: userId }, config.oauth.jwt.client_secret, { expiresIn: '24h' });
+  static GenerateAccessToken(user) {
+    const tokenData = {
+      id: user.id,
+      role: user.role,
+    };
+    return jwt.sign(tokenData, config.oauth.jwt.client_secret, { expiresIn: '24h' });
   }
 
   static async GoogleUser(data) {
@@ -56,17 +60,30 @@ class Authentication {
         return;
       }
 
-      const { id } = data;
-      const blackball = await Blackball.findById(id);
+      const blackball = await Blackball.findById(token);
 
       if (blackball) {
         res.sendStatus(403);
         return;
       }
 
-      req.userId = id;
+      req.tokenData = data;
       next();
     });
+  }
+
+  static async AuthRole(roles) {
+    return [
+      Authentication.isAuthenticated,
+      (req, res, next) => {
+        const { role } = req.tokenData;
+        if (!roles.includes(role)) {
+          res.sendStatus(403);
+          return;
+        }
+        next();
+      },
+    ];
   }
 
   static async Logout(req, res, next) {
@@ -75,6 +92,7 @@ class Authentication {
     // Add the token to the blackball list.
     const blackball = new Blackball({ _id: token });
     blackball.save();
+    res.sendStatus(200);
     next();
   }
 }
