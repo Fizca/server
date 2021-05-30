@@ -7,13 +7,16 @@ const momentSchema = new Schema({
     type: String,
     required: true,
   },
-  text: {
-    type: String,
-  },
+  text: String,
   assets: [{
     type: Schema.Types.ObjectId,
     ref: 'asset',
   }],
+  takenAt: {
+    type: Date,
+    required: true,
+    default: Date.now(),
+  },
   user: {
     type: Schema.Types.ObjectId,
     ref: 'user',

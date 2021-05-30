@@ -20,16 +20,16 @@ router.post('', upload.array('images', AssetHandler.MaximumImageCount), async (r
     text,
     profile,
   } = req.body;
-  const { files = [], user } = req;
+  const { files = [], tokenData: { id } } = req;
 
-  const assets = await AssetHandler.CreateMultipleImages(files, user);
+  const assets = await AssetHandler.CreateMultipleImages(files, id);
 
   const moment = new Moment({
     title,
     text,
     assets,
     profile,
-    user,
+    user: id,
   });
   await moment.save();
   res.json(moment);
@@ -40,9 +40,9 @@ router.post('', upload.array('images', AssetHandler.MaximumImageCount), async (r
  */
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { text, title } = req.body;
+  const { text, title, vitals } = req.body;
 
-  const update = { text, title };
+  const update = { text, title, vitals };
   const options = { new: true, useFindAndModify: false };
   Moment.findByIdAndUpdate(id, update, options)
     .then((model) => {

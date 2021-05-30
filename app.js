@@ -7,14 +7,17 @@ const express = require('express');
 const mongoose = require('mongoose');
 const session = require('express-session');
 
-const usersRoute = require('./routes/users-route');
 const assetsRoute = require('./routes/assets-route');
 const authRoute = require('./routes/auth-route');
 const momentsRoute = require('./routes/moments-route');
 const profilesRoute = require('./routes/profiles-route');
+const vitalsRoute = require('./routes/vitals-route');
+const usersRoute = require('./routes/users-route');
 
 const app = express();
 const MongoStore = connectMongo(session);
+
+mongoose.set('useCreateIndex', true);
 
 /**
  * Middleware
@@ -48,6 +51,7 @@ app.use('/auth', authRoute);
 app.use('/moments', momentsRoute);
 app.use('/profiles', profilesRoute);
 app.use('/users', usersRoute);
+app.use('/vitals', vitalsRoute);
 
 /**
  * Routes
