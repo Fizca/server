@@ -27,25 +27,44 @@ router.post('', isAuthenticated, upload.array('images', MAX_IMAGE_COUNT), async 
 /**
  * Get all assets stored in the database
  */
-router.get('/list/', isAuthenticated, async (req, res) => {
-  const { page = 0 } = req.query;
-  const assets = await Asset.find()
-    .getPage(page, LIMIT);
+router.get('/list', isAuthenticated, async (req, res) => {
+  const { page = 0, profile } = req.query;
+  const query = {};
+  if (profile) {
+    query.profile = profile;
+  }
+  const assets = await Asset.find(query)
+    .getPage(page, LIMIT)
+    .populate('user', 'username');
 
-  res.json(assets);
+  const count = await Asset.countDocuments(query);
+
+  res.json({
+    assets,
+    page,
+    count,
+    limit: LIMIT,
+  });
 });
 
 /**
  * Get all assets stored in the database for a given profile
  */
-router.get('/list/profile/:profile', isAuthenticated, async (req, res) => {
+router.get('/profile/:profile', isAuthenticated, async (req, res) => {
   const { page = 0 } = req.query;
   const { profile } = req.params;
-  const assets = await Asset.find({ profile })
+  const query = { profile };
+  const assets = await Asset.find(query)
     .getPage(page, LIMIT)
     .populate('user', 'username');
+  const count = await Asset.countDocuments(query);
 
-  res.json(assets);
+  res.json({
+    assets,
+    page,
+    count,
+    limit: LIMIT,
+  });
 });
 
 /**

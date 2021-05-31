@@ -45,7 +45,7 @@ const assetSchema = new Schema({
  * @param {number} limit
  * @returns Array of results
  */
-assetSchema.statics.getPage = function getPage(page, limit) {
+assetSchema.query.getPage = function getPage(page, limit) {
   return this.skip(limit * page)
     .limit(limit)
     .sort([['_id', -1]]);
