@@ -1,7 +1,7 @@
 const config = require('config');
 const jwt = require('jsonwebtoken');
 
-const Blackball = require('../models/blackball');
+const AuthToken = require('../models/auth-token');
 const User = require('../models/user');
 
 class Authentication {
@@ -23,19 +23,20 @@ class Authentication {
       'google.id': sub,
     });
 
-    if (user && user.google.avatar !== picture) {
-      user.google.avatar = picture;
+    if (user && !user.avatar) {
+      user.avatar = picture;
       await user.save();
     }
 
     if (!user) {
       user = new User({
         method: 'google',
+        username: name,
+        avatar: picture,
         google: {
           id: sub,
           email,
           displayName: name,
-          avatar: picture,
         },
       });
       user.save();
@@ -60,9 +61,9 @@ class Authentication {
         return;
       }
 
-      const blackball = await Blackball.findById(token);
+      const authToken = await AuthToken.findById(token);
 
-      if (blackball) {
+      if (authToken) {
         res.sendStatus(403);
         return;
       }
@@ -89,9 +90,9 @@ class Authentication {
   static async Logout(req, res, next) {
     const token = req.headers.access_token;
 
-    // Add the token to the blackball list.
-    const blackball = new Blackball({ _id: token });
-    blackball.save();
+    // Add the token to the expired list.
+    const authToken = new AuthToken({ _id: token });
+    authToken.save();
     res.sendStatus(200);
     next();
   }

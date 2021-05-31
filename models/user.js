@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const userSchema = new Schema({
+  username: String,
+  avatar: String,
   role: {
     type: 'string',
     enum: ['none', 'guest', 'contributor', 'admin'],
@@ -10,7 +12,7 @@ const userSchema = new Schema({
   },
   method: {
     type: String,
-    enum: ['local', 'google', 'facebook'],
+    enum: ['google'],
     required: true,
   },
   google: {
@@ -23,27 +25,10 @@ const userSchema = new Schema({
     displayName: {
       type: String,
     },
-    avatar: {
-      type: String,
-    },
   },
 }, {
   timestamps: true,
 });
-
-userSchema.methods = {
-  name() {
-    return this.google.displayName;
-  },
-
-  email() {
-    return this.google.email;
-  },
-
-  providerId() {
-    return this.google.id;
-  },
-};
 
 // Create a model
 const User = mongoose.model('user', userSchema);
