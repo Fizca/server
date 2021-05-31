@@ -12,10 +12,6 @@ const assetSchema = new Schema({
   name: {
     type: String,
   },
-  user: {
-    type: Schema.Types.ObjectId,
-    ref: 'user',
-  },
   takenAt: {
     type: Number,
     default: Date.now(),
@@ -28,12 +24,37 @@ const assetSchema = new Schema({
       type: Number,
     },
   },
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: 'user',
+    required: true,
+  },
+  profile: {
+    type: Schema.Types.ObjectId,
+    ref: 'profile',
+    required: true,
+    index: true,
+  },
 }, {
   timestamps: true,
 });
 
+/**
+ * Get a paginated result in desc order by id.
+ * @param {number} page
+ * @param {number} limit
+ * @returns Array of results
+ */
+assetSchema.statics.getPage = function getPage(page, limit) {
+  return this.skip(limit * page)
+    .limit(limit)
+    .sort([['_id', -1]]);
+};
+
 // Create a model
 const Asset = mongoose.model('asset', assetSchema);
+
+// Or, equivalently, you can call `animalSchema.static()`.
 
 // Export the model
 module.exports = Asset;

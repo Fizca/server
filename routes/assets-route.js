@@ -11,6 +11,7 @@ const upload = multer({ dest: 'uploads/' });
 const router = express.Router();
 
 const MAX_IMAGE_COUNT = 13;
+const LIMIT = 10;
 
 /**
  * Upload a number of images to the server
@@ -26,8 +27,23 @@ router.post('', isAuthenticated, upload.array('images', MAX_IMAGE_COUNT), async 
 /**
  * Get all assets stored in the database
  */
-router.get('/list', isAuthenticated, async (req, res) => {
-  const assets = await Asset.find({});
+router.get('/list/', isAuthenticated, async (req, res) => {
+  const { page = 0 } = req.query;
+  const assets = await Asset.find()
+    .getPage(page, LIMIT);
+
+  res.json(assets);
+});
+
+/**
+ * Get all assets stored in the database for a given profile
+ */
+router.get('/list/profile/:profile', isAuthenticated, async (req, res) => {
+  const { page = 0 } = req.query;
+  const { profile } = req.params;
+  const assets = await Asset.find({ profile })
+    .getPage(page, LIMIT)
+    .populate('user', 'username');
 
   res.json(assets);
 });
