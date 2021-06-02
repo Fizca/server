@@ -1,11 +1,11 @@
 const express = require('express');
-const { isAuthenticated } = require('../services/authentication');
+const { AuthUser } = require('../services/middlewares');
 const Vitals = require('../models/vitals');
 
 const router = express.Router();
 
 // Gate the entire route with authentication
-router.use(isAuthenticated);
+router.use(AuthUser);
 
 /**
  * Create a new vitals

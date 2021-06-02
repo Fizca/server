@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const { isAuthenticated } = require('../services/authentication');
+const { AuthUser } = require('../services/middlewares');
 const Moment = require('../models/moment');
 const AssetHandler = require('../services/asset-handler');
 
@@ -9,7 +9,7 @@ const router = express.Router();
 const upload = multer({ dest: 'uploads/' });
 
 // Gate the entire route with authentication
-router.use(isAuthenticated);
+router.use(AuthUser);
 
 /**
  * Create a new moment

@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 
 const AuthToken = require('../models/auth-token');
 const User = require('../models/user');
+const { RoleCheck } = require('./user-roles');
 
 class Authentication {
   static GenerateAccessToken(user) {
@@ -44,57 +45,6 @@ class Authentication {
     }
 
     return user;
-  }
-
-  static async isAuthenticated(req, res, next) {
-    const token = req.headers.access_token;
-
-    if (token == null) {
-      res.sendStatus(401);
-      return;
-    }
-
-    await jwt.verify(token, config.oauth.jwt.client_secret, async (err, data) => {
-      if (err) {
-        console.log(err);
-        res.sendStatus(403);
-        return;
-      }
-
-      const authToken = await AuthToken.findById(token);
-
-      if (authToken) {
-        res.sendStatus(403);
-        return;
-      }
-
-      req.tokenData = data;
-      next();
-    });
-  }
-
-  static async AuthRole(roles) {
-    return [
-      Authentication.isAuthenticated,
-      (req, res, next) => {
-        const { role } = req.tokenData;
-        if (!roles.includes(role)) {
-          res.sendStatus(403);
-          return;
-        }
-        next();
-      },
-    ];
-  }
-
-  static async Logout(req, res, next) {
-    const token = req.headers.access_token;
-
-    // Add the token to the expired list.
-    const authToken = new AuthToken({ _id: token });
-    authToken.save();
-    res.sendStatus(200);
-    next();
   }
 }
 

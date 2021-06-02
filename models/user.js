@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { UserRoles } = require('../services/user-roles');
 
 const { Schema } = mongoose;
 
@@ -7,7 +8,7 @@ const userSchema = new Schema({
   avatar: String,
   role: {
     type: 'string',
-    enum: ['none', 'guest', 'contributor', 'admin'],
+    enum: Object.values(UserRoles),
     default: 'none',
   },
   method: {

@@ -1,11 +1,11 @@
 const express = require('express');
-const { isAuthenticated } = require('../services/authentication');
+const { AuthUser } = require('../services/middlewares');
 const Profile = require('../models/profile');
 
 const router = express.Router();
 
 // Gate the entire route with authentication
-router.use(isAuthenticated);
+router.use(AuthUser);
 
 /**
  * Get all profiles stored in the database

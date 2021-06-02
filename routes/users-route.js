@@ -1,13 +1,13 @@
 const express = require('express');
 const User = require('../models/user');
-const { isAuthenticated } = require('../services/authentication');
+const { AuthUser } = require('../services/middlewares');
 
 const router = express.Router();
 
 /**
  * Retrieve own account
  */
-router.get('/me', isAuthenticated, async (req, res) => {
+router.get('/me', AuthUser, async (req, res) => {
   const { tokenData } = req;
   const user = await User.findById(tokenData.id)
     .catch((e) => {

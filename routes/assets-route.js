@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const AssetHandler = require('../services/asset-handler');
 const S3 = require('../services/aws-s3');
-const { isAuthenticated } = require('../services/authentication');
+const { AuthUser } = require('../services/middlewares');
 const Asset = require('../models/asset');
 const User = require('../models/user');
 
@@ -16,7 +16,7 @@ const LIMIT = 10;
 /**
  * Upload a number of images to the server
  */
-router.post('', isAuthenticated, upload.array('images', MAX_IMAGE_COUNT), async (req, res) => {
+router.post('', AuthUser, upload.array('images', MAX_IMAGE_COUNT), async (req, res) => {
   const { files, tokenData } = req;
   const user = await User.findById(tokenData.id);
 
@@ -27,7 +27,7 @@ router.post('', isAuthenticated, upload.array('images', MAX_IMAGE_COUNT), async 
 /**
  * Get all assets stored in the database
  */
-router.get('/list', isAuthenticated, async (req, res) => {
+router.get('/list', AuthUser, async (req, res) => {
   const { page = 0, profile } = req.query;
   const query = {};
   if (profile) {
@@ -50,7 +50,7 @@ router.get('/list', isAuthenticated, async (req, res) => {
 /**
  * Get all assets stored in the database for a given profile
  */
-router.get('/profile/:profile', isAuthenticated, async (req, res) => {
+router.get('/profile/:profile', AuthUser, async (req, res) => {
   const { page = 0 } = req.query;
   const { profile } = req.params;
   const query = { profile };
@@ -80,7 +80,7 @@ router.get('/:id', async (req, res) => {
 /**
  * Generate the signed url for S3 bucket for an asset.
  */
-router.get('/url/:key', isAuthenticated, async (req, res) => {
+router.get('/url/:key', AuthUser, async (req, res) => {
   const { key } = req.params;
 
   const image = await S3.getSignedUrl(key);
