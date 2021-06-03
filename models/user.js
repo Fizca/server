@@ -8,7 +8,7 @@ const userSchema = new Schema({
   avatar: String,
   role: {
     type: 'string',
-    enum: Object.values(UserRoles),
+    enum: UserRoles,
     default: 'none',
   },
   method: {
@@ -25,6 +25,28 @@ const userSchema = new Schema({
     },
     displayName: {
       type: String,
+    },
+  },
+  profile: {
+    type: Schema.Types.ObjectId,
+    ref: 'profile',
+    required: true,
+  },
+  preferences: {
+    weight: {
+      type: String,
+      enum: ['lbs', 'kg'],
+      default: 'kg',
+    },
+    length: {
+      type: String,
+      enum: ['m', 'inches'],
+      default: 'kg',
+    },
+    temp: {
+      type: String,
+      enum: ['f', 'f'],
+      default: 'kg',
     },
   },
 }, {
