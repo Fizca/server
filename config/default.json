@@ -17,5 +17,10 @@
         "region": "",
         "bucket_name": ""
     },
+    "assets": [
+        { "width": 200, "height": 200, "fit": "inside", "format": "jpg", "bucket": "small" },
+        { "width": 400, "height": 400, "fit": "inside", "format": "jpg", "bucket": "medium" },
+        { "width": 600, "height": 600, "fit": "inside", "format": "jpg", "bucket": "large" }
+    ],
     "cors_whitelist": "http://localhost:3001"
 }

@@ -49,7 +49,7 @@ const Logout = async (req, res, next) => {
   next();
 };
 
-module.export = {
+module.exports = {
   AuthRole,
   AuthUser,
   Logout,

@@ -1,13 +1,7 @@
 const crypto = require('crypto');
 const exifr = require('exifr');
-const fs = require('fs');
 const path = require('path');
 const Sharp = require('sharp');
-
-const S3 = require('./aws-s3');
-const Asset = require('../models/asset');
-
-const MAX_IMAGE_COUNT = 13;
 
 /**
  * AWSS3 Example of simple class with basic functionality used to upload
@@ -17,10 +11,6 @@ const MAX_IMAGE_COUNT = 13;
  * @since 2018-11-27
  */
 class AssetHandler {
-  static get MaximumImageCount() {
-    return MAX_IMAGE_COUNT;
-  }
-
   /**
    * Resize the image using sharp
    *
@@ -29,8 +19,11 @@ class AssetHandler {
    * @returns
    */
   static Resizer(filepath, options) {
-    const { width, height, fit } = options;
+    const {
+      width, height, fit, format,
+    } = options;
     return Sharp(filepath)
+      .toFormat(format)
       .resize({ width, height, fit })
       .toBuffer()
       .then((buffer) => buffer)
@@ -41,79 +34,10 @@ class AssetHandler {
   }
 
   /**
-   * Uploads the image to the S3 bucket
-   *
-   * @param {string} filepath The file path
-   * @param {string} name The name for the asset
+   * Retrieve data from the EXIF block of the image
+   * @param {object} filepath
    * @returns
    */
-  static async Upload(filepath, name) {
-    if (!fs.existsSync(filepath)) {
-      throw new Error(`the file ${filepath} does not exist`);
-    }
-    const buffer = fs.readFileSync(filepath, null);
-    const resized = await this.Resizer(buffer, { width: 200, height: 200, fit: 'inside' });
-    return S3.putObject(resized, name);
-  }
-
-  /**
-   * Create new image
-   * @param {Object} fileData
-   * @param {Object} user
-   */
-  static async CreateImage(fileData, user) {
-    const { originalname, path: filepath } = fileData;
-
-    const metadata = await this.ExtractMetadata(filepath);
-
-    const original = `${Date.now()}-${originalname}`;
-    const hash = crypto.createHash('sha256').update(original).digest('hex');
-    const name = `${hash}${path.extname(originalname)}`;
-    console.log(`Hashing image for user: ${original} => ${name}`);
-
-    await this.Upload(filepath, name);
-    console.log(`Successfully uploaded image: ${name}`);
-
-    fs.unlink(filepath, (err) => {
-      if (err) {
-        console.log(`Unable to delete ${filepath}`);
-      }
-    });
-
-    const asset = new Asset({
-      name,
-      type: 'image',
-      user,
-      takenAt: metadata.createdAt || Date.now(),
-      metadata: {
-        latitude: metadata.latitude,
-        longitude: metadata.longitude,
-      },
-    });
-    return asset.save();
-  }
-
-  /**
-   * Create multiple images.
-   * @param {Object} file
-   * @param {Object} user
-   */
-  static async CreateMultipleImages(files, user) {
-    // Upload the file and create the asset
-    const promises = await files.map(async (file) => {
-      const asset = await AssetHandler.CreateImage(file, user)
-        .catch((err) => {
-          console.log('Unable to upload image to S3', err.message);
-          return false;
-        });
-      return asset;
-    });
-
-    // Get only the assets that passed.
-    const assets = await Promise.all(promises);
-    return assets.filter((asset) => asset);
-  }
-
   static async ExtractMetadata(filepath) {
     const metadata = await exifr.parse(filepath)
       .then((data) => data || {})
@@ -128,6 +52,33 @@ class AssetHandler {
       createdAt: metadata.CreateDate,
       modifiedAt: metadata.ModifyDate,
     };
+  }
+
+  /**
+   * hash the original name of the file to make them both uniform and less
+   * predictable
+   * @param {string} originalname
+   * @param {string} salt
+   * @returns
+   */
+  static HashFileName(originalname, salt) {
+    const hash = crypto.createHash('sha256').update(`${originalname}-${salt}`).digest('hex');
+    return `${hash}${path.extname(originalname)}`;
+  }
+
+  /**
+   * Loop through all configurations to generate images
+   * @param {string} filepath
+   * @param {string} name
+   * @param {string} name
+   * @returns
+   */
+  static GenerateResizedImages(filepath, options) {
+    const promises = options.map((entry) => {
+      console.log(`Processing ${filepath}: ${entry}`);
+      return this.Resizer(filepath, entry);
+    });
+    return Promise.all(promises);
   }
 }
 

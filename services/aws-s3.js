@@ -1,5 +1,6 @@
 const config = require('config');
 const AWS = require('aws-sdk');
+const FileType = require('file-type');
 
 /**
  * AWSS3 Example of simple class with basic functionality used to upload
@@ -26,10 +27,9 @@ class AWSS3 {
    * @since 2018-11-27
    * @param {String} filepath
    * @param {String} name
-   * @param {JSON} options eg. { resize: { width: 300, height: 400 } }
    * @return
    */
-  putObject(buffer, name) {
+  async putObject(buffer, name) {
     // Response block.
     const { bucket_name: bucketName, region } = this.awsConfig;
     const res = {
@@ -38,10 +38,12 @@ class AWSS3 {
       data: [],
     };
 
+    const { mime } = await FileType.fromBuffer(buffer);
     const params = {
       Body: buffer,
       Bucket: this.awsConfig.bucket_name,
       Key: name,
+      ContentType: mime,
     };
 
     return this.s3.putObject(params, (e, d) => {
