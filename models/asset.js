@@ -35,6 +35,11 @@ const assetSchema = new Schema({
     required: true,
     index: true,
   },
+  tags: {
+    type: [Schema.Types.ObjectId],
+    ref: 'tag',
+    index: true,
+  },
 }, {
   timestamps: true,
 });

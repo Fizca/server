@@ -7,6 +7,7 @@ const S3 = require('../services/aws-s3');
 const { AuthUser } = require('../services/middlewares');
 const Asset = require('../models/asset');
 const User = require('../models/user');
+const Tag = require('../models/tag');
 
 const upload = multer({ dest: 'uploads/' });
 
@@ -17,10 +18,14 @@ const LIMIT = 10;
 /**
  * Upload a number of images to the server
  */
-const uploadFields = upload.fields([{ name: 'image' }, { name: 'profile' }]);
+const uploadFields = upload.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'profile' },
+  { name: 'tags' },
+]);
 router.post('', AuthUser, uploadFields, async (req, res) => {
   const { files: { image }, tokenData } = req;
-  const { profile } = req.body;
+  const { profile, tags = [] } = req.body;
   const user = await User.findById(tokenData.id);
 
   // Preprocess the file data
@@ -46,6 +51,18 @@ router.post('', AuthUser, uploadFields, async (req, res) => {
     }
   });
 
+  // Process the tags
+  const tagObjs = [];
+  for (let i = 0; i < tags.length; i += 1) {
+    const query = { name: tags[i], profile };
+    // eslint-disable-next-line no-await-in-loop
+    const doc = await Tag.findOneAndUpdate(query, query, {
+      new: true,
+      upsert: true,
+    });
+    tagObjs.push(doc);
+  }
+
   // Create and save the asset
   const asset = new Asset({
     name,
@@ -57,6 +74,7 @@ router.post('', AuthUser, uploadFields, async (req, res) => {
       latitude: metadata.latitude,
       longitude: metadata.longitude,
     },
+    tags: tagObjs,
   });
   await asset.save();
 
@@ -99,10 +117,10 @@ router.get('/:id', async (req, res) => {
 /**
  * Generate the signed url for S3 bucket for an asset.
  */
-router.get('/url/:key', AuthUser, async (req, res) => {
-  const { key } = req.params;
+router.get('/url/:size/:key', AuthUser, async (req, res) => {
+  const { size, key } = req.params;
 
-  const image = await S3.getSignedUrl(key);
+  const image = await S3.getSignedUrl(`${size}/${key}`);
 
   res.send(image);
 });
