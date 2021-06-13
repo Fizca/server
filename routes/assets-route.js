@@ -52,16 +52,7 @@ router.post('', AuthUser, uploadFields, async (req, res) => {
   });
 
   // Process the tags
-  const tagObjs = [];
-  for (let i = 0; i < tags.length; i += 1) {
-    const query = { name: tags[i], profile };
-    // eslint-disable-next-line no-await-in-loop
-    const doc = await Tag.findOneAndUpdate(query, query, {
-      new: true,
-      upsert: true,
-    });
-    tagObjs.push(doc);
-  }
+  const tagObjs = await Tag.Upsert(tags, profile);
 
   // Create and save the asset
   const asset = new Asset({

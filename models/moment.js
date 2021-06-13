@@ -27,6 +27,11 @@ const momentSchema = new Schema({
     ref: 'profile',
     required: true,
   },
+  tags: {
+    type: [Schema.Types.ObjectId],
+    ref: 'tag',
+    index: true,
+  },
 }, {
   timestamps: true,
 });

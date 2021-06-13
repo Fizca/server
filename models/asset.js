@@ -59,7 +59,5 @@ assetSchema.query.getPage = function getPage(page, limit) {
 // Create a model
 const Asset = mongoose.model('asset', assetSchema);
 
-// Or, equivalently, you can call `animalSchema.static()`.
-
 // Export the model
 module.exports = Asset;

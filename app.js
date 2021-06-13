@@ -11,8 +11,9 @@ const assetsRoute = require('./routes/assets-route');
 const authRoute = require('./routes/auth-route');
 const momentsRoute = require('./routes/moments-route');
 const profilesRoute = require('./routes/profiles-route');
-const vitalsRoute = require('./routes/vitals-route');
+const tagsRoute = require('./routes/tags-route');
 const usersRoute = require('./routes/users-route');
+const vitalsRoute = require('./routes/vitals-route');
 
 const app = express();
 const MongoStore = connectMongo(session);
@@ -50,6 +51,7 @@ app.use('/assets', assetsRoute);
 app.use('/auth', authRoute);
 app.use('/moments', momentsRoute);
 app.use('/profiles', profilesRoute);
+app.use('/tags', tagsRoute);
 app.use('/users', usersRoute);
 app.use('/vitals', vitalsRoute);
 

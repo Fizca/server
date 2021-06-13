@@ -1,12 +1,10 @@
 const express = require('express');
-const multer = require('multer');
 const { AuthUser } = require('../services/middlewares');
 const Moment = require('../models/moment');
 const AssetHandler = require('../services/asset-handler');
+const Tag = require('../models/tag');
 
 const router = express.Router();
-
-const upload = multer({ dest: 'uploads/' });
 
 // Gate the entire route with authentication
 router.use(AuthUser);
@@ -14,22 +12,24 @@ router.use(AuthUser);
 /**
  * Create a new moment
  */
-router.post('', upload.array('images', AssetHandler.MaximumImageCount), async (req, res) => {
+router.post('', async (req, res) => {
+  const { tokenData } = req;
   const {
     title,
     text,
     profile,
+    tags = [],
   } = req.body;
-  const { files = [], tokenData: { id } } = req;
 
-  const assets = await AssetHandler.CreateMultipleImages(files, id);
+  // Process the tags
+  const tagObjs = await Tag.Upsert(tags, profile);
 
   const moment = new Moment({
     title,
     text,
-    assets,
     profile,
-    user: id,
+    tags: tagObjs,
+    user: tokenData.id,
   });
   await moment.save();
   res.json(moment);
