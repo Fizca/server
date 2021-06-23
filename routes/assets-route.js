@@ -25,7 +25,7 @@ const uploadFields = upload.fields([
 ]);
 router.post('', AuthUser, uploadFields, async (req, res) => {
   const { files: { image }, tokenData } = req;
-  const { profile, tags = [] } = req.body;
+  const { profile, tags = [], moment } = req.body;
   const user = await User.findById(tokenData.id);
 
   // Preprocess the file data
@@ -60,6 +60,7 @@ router.post('', AuthUser, uploadFields, async (req, res) => {
     type: 'image',
     user,
     profile,
+    moment,
     takenAt: metadata.createdAt || Date.now(),
     metadata: {
       latitude: metadata.latitude,
@@ -75,8 +76,9 @@ router.post('', AuthUser, uploadFields, async (req, res) => {
 /**
  * Get all assets stored in the database
  */
-router.get('/list', AuthUser, async (req, res) => {
-  const { page = 0, profile } = req.query;
+router.get('/profile/:profile', AuthUser, async (req, res) => {
+  const { profile } = req.params;
+  const { page = 0 } = req.query;
   const query = {};
   if (profile) {
     query.profile = profile;
@@ -88,7 +90,7 @@ router.get('/list', AuthUser, async (req, res) => {
   const count = await Asset.countDocuments(query);
 
   res.json({
-    assets,
+    objects: assets,
     page,
     count,
     limit: LIMIT,
