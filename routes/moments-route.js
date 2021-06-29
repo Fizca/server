@@ -2,6 +2,7 @@ const express = require('express');
 const { AuthUser } = require('../services/middlewares');
 const Moment = require('../models/moment');
 const Tag = require('../models/tag');
+const Timeline = require('../models/timeline');
 
 const router = express.Router();
 
@@ -33,6 +34,14 @@ router.post('', async (req, res) => {
     user: tokenData.id,
   });
   await moment.save();
+
+  Timeline.create({
+    profile,
+    moment,
+    tags: tagObjs,
+    takenAt: moment.takenAt,
+  });
+
   res.json(moment);
 });
 
@@ -41,39 +50,48 @@ router.post('', async (req, res) => {
  */
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { text, title, vitals } = req.body;
+  const {
+    text, title, tags, takenAt,
+  } = req.body;
 
-  const update = { text, title, vitals };
+  // Find the moment
+  const moment = await Moment.findById(id);
+
+  // Update or create any tags.
+  const tagObjs = await Tag.Upsert(tags, moment.profile);
+
+  // Update the moment
+  moment.title = title;
+  moment.text = text;
+  moment.tags = tagObjs;
+  moment.takenAt = takenAt;
+  await moment.save();
+
+  // Update the timeline with any required updates
   const options = { new: true, useFindAndModify: false };
-  Moment.findByIdAndUpdate(id, update, options)
-    .then((model) => {
-      console.log('Updated model:', JSON.stringify(model));
-      res.json(model);
-    })
-    .catch((err) => {
-      console.error('Unable to update entry: ', err.message);
-      res.status(400);
-    });
+  await Timeline.findOneAndUpdate(
+    { moment: id },
+    {
+      tags: tagObjs,
+      takenAt: moment.takenAt,
+    },
+    options,
+  );
+
+  res.json(moment);
 });
 
 /**
- * Update a moment
+ * Get a moment
  */
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
-  const { text, title, vitals } = req.body;
 
-  const update = { text, title, vitals };
-  const options = { new: true, useFindAndModify: false };
-  Moment.findByIdAndUpdate(id, update, options)
-    .then((model) => {
-      console.log('Updated model:', JSON.stringify(model));
-      res.json(model);
-    })
-    .catch((err) => {
-      console.error('Unable to update entry: ', err.message);
-      res.status(400);
-    });
+  const moment = await Moment.findById(id)
+    .populate('assets')
+    .populate('tags');
+
+  res.json(moment);
 });
 
 /**

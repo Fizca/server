@@ -8,6 +8,7 @@ const { AuthUser } = require('../services/middlewares');
 const Asset = require('../models/asset');
 const User = require('../models/user');
 const Tag = require('../models/tag');
+const Timeline = require('../models/timeline');
 
 const upload = multer({ dest: 'uploads/' });
 
@@ -70,6 +71,13 @@ router.post('', AuthUser, uploadFields, async (req, res) => {
   });
   await asset.save();
 
+  Timeline.create({
+    profile,
+    asset,
+    tags: tagObjs,
+    takenAt: asset.takenAt,
+  });
+
   res.json(asset);
 });
 
@@ -103,6 +111,38 @@ router.get('/profile/:profile', AuthUser, async (req, res) => {
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
   const asset = await Asset.findById(id);
+
+  res.json(asset);
+});
+
+/**
+ * Update an asset
+ */
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const {
+    tags,
+  } = req.body;
+
+  // Find the asset
+  const asset = await Asset.findById(id);
+
+  // Update or create any tags.
+  const tagObjs = await Tag.Upsert(tags, asset.profile);
+
+  // Update the asset
+  asset.tags = tagObjs;
+  await asset.save();
+
+  // Update the timeline with any required updates
+  const options = { new: true, useFindAndModify: false };
+  await Timeline.findOneAndUpdate(
+    { asset: id },
+    {
+      tags: tagObjs,
+    },
+    options,
+  );
 
   res.json(asset);
 });

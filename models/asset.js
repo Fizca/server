@@ -50,7 +50,7 @@ const assetSchema = new Schema({
 });
 
 /**
- * Get a paginated result in desc order by id.
+ * Get a paginated result in desc order by takenAt.
  * @param {number} page
  * @param {number} limit
  * @returns Array of results
@@ -58,7 +58,7 @@ const assetSchema = new Schema({
 assetSchema.query.getPage = function getPage(page, limit) {
   return this.skip(limit * page)
     .limit(limit)
-    .sort([['_id', -1]]);
+    .sort([['takenAt', -1]]);
 };
 
 // Create a model

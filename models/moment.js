@@ -46,7 +46,7 @@ momentSchema.virtual('assets', {
 momentSchema.query.getPage = function getPage(page, limit) {
   return this.skip(limit * page)
     .limit(limit)
-    .sort([['_id', -1]]);
+    .sort([['takenAt', -1]]);
 };
 
 // Create a model
