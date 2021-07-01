@@ -16,6 +16,11 @@ class AWSS3 {
     this.awsConfig = config.aws;
 
     this.s3 = new AWS.S3(this.awsConfig);
+
+    this.signer = new AWS.CloudFront.Signer(
+      config.cloudfront.keyPairId,
+      config.cloudfront.privateKey,
+    );
   }
 
   /**
@@ -69,6 +74,34 @@ class AWSS3 {
       Expires: 60 * 5,
     };
     return this.s3.getSignedUrl('getObject', params);
+  }
+
+  async getObject(key, callback) {
+    const { bucket_name: bucketName } = this.awsConfig;
+
+    const params = { Bucket: bucketName, Key: key };
+    this.s3.getObject(params, callback);
+  }
+
+  /**
+   * Generate the cookies required for cloudfront
+   * @returns
+   */
+  generateCookies() {
+    const { cloudfront: { cfUrl, ttl } } = config;
+
+    const policy = {
+      Statement: [{
+        Resource: `http*://${cfUrl}/*`,
+        Condition: {
+          DateLessThan: { 'AWS:EpochTime': (Date.now() / 1000) + ttl },
+        },
+      }],
+    };
+    const policyString = JSON.stringify(policy);
+    const options = { url: `http://${cfUrl}`, policy: policyString };
+
+    return this.signer.getSignedCookie(options);
   }
 }
 

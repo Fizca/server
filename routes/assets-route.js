@@ -148,6 +148,21 @@ router.put('/:id', async (req, res) => {
 });
 
 /**
+ * Retrieve the image directly from S3
+ */
+router.get('/:size/:key', AuthUser, async (req, res) => {
+  const { size, key } = req.params;
+
+  S3.getObject(`${size}/${key}`, (err, data) => {
+    if (err) throw err;
+
+    res.writeHead(200, { 'Content-Type': data.ContentType });
+    res.write(data.Body, 'binary');
+    res.end(null, 'binary');
+  });
+});
+
+/**
  * Generate the signed url for S3 bucket for an asset.
  */
 router.get('/url/:size/:key', AuthUser, async (req, res) => {
