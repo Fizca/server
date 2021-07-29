@@ -32,7 +32,7 @@ router.post('/google', async (req, res) => {
       'abcdefg',
       {
         maxAge: config.session.max_age_millis,
-        httpOnly: true,
+        httpOnly: false,
       },
     );
     res.status(201);
