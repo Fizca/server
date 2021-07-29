@@ -27,7 +27,16 @@ router.post('/google', async (req, res) => {
     req.session.user.id = user.id;
     req.session.user.role = user.role;
 
-    res.cookie('_connection', { role: user.role }, { maxAge: config.session.max_age_millis, httpOnly: true });
+    res.cookie(
+      '_connection',
+      'abcdefg',
+      {
+        maxAge: config.session.max_age_millis,
+        httpOnly: true,
+        sameSite: 'none',
+        path: '/',
+      },
+    );
     res.status(201);
   }
   res.send();
