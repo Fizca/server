@@ -23,14 +23,13 @@ mongoose.set('useCreateIndex', true);
 /**
  * Middleware
  */
-app.enable('trust proxy');
-
 // Store the session on mongo
 app.use(session({
   secret: config.session.secret,
   cookie: {
     secure: true,
     httpOnly: false,
+    sameSite: 'none',
     maxAge: config.session.max_age_millis,
   },
   resave: true,
