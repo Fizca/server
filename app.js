@@ -28,8 +28,8 @@ app.set('trust proxy', 1);
 // Store the session on mongo
 app.use(session({
   secret: config.session.secret,
+  proxy: true,
   cookie: {
-    secure: true,
     httpOnly: false,
     sameSite: 'none',
     maxAge: config.session.max_age_millis,
