@@ -33,8 +33,7 @@ router.post('/google', async (req, res) => {
       {
         maxAge: config.session.max_age_millis,
         httpOnly: true,
-        sameSite: 'none',
-        path: '/',
+        domain: 'roloenusa.com',
       },
     );
     res.status(201);
