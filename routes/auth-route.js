@@ -33,6 +33,7 @@ router.post('/google', async (req, res) => {
       {
         maxAge: config.session.max_age_millis,
         httpOnly: false,
+        secure: true,
         sameSite: 'none',
       },
     );
