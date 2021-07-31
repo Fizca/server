@@ -2,7 +2,7 @@ const config = require('config');
 const express = require('express');
 const { OAuth2Client } = require('google-auth-library');
 
-const { Logout } = require('../services/middlewares');
+const { Logout, AuthUser } = require('../services/middlewares');
 const Authentication = require('../services/authentication');
 
 const client = new OAuth2Client(config.oauth.google.client_id);
@@ -41,6 +41,10 @@ router.post('/google', async (req, res) => {
     res.status(201);
   }
   res.send();
+});
+
+router.get('session', AuthUser, (req, res) => {
+  req.session;
 });
 
 router.get('/logout', Logout);
