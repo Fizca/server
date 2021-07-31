@@ -2,6 +2,8 @@ const User = require('../models/user');
 
 class Authentication {
   static async GoogleUser(data) {
+    console.log('data');
+    console.log(data);
     const {
       name, email, picture, sub,
     } = data;
