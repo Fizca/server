@@ -35,7 +35,7 @@ router.post('/google', async (req, res) => {
         httpOnly: false,
         secure: true,
         sameSite: 'none',
-        domain: 'roloenusa.com',
+        credentials: true,
       },
     );
     res.status(201);

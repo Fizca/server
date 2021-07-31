@@ -33,6 +33,7 @@ app.use(session({
     httpOnly: false,
     sameSite: 'none',
     maxAge: config.session.max_age_millis,
+    credentials: true,
   },
   resave: true,
   saveUninitialized: false,
