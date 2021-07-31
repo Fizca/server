@@ -32,6 +32,7 @@ app.use(session({
   cookie: {
     httpOnly: false,
     sameSite: 'none',
+    secure: true,
     maxAge: config.session.max_age_millis,
     credentials: true,
   },
