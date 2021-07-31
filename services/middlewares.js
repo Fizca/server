@@ -3,7 +3,7 @@ const User = require('../models/user');
 const { RoleCheck } = require('./user-roles');
 
 const AuthUser = async (req, res, next) => {
-  if (!req.session) {
+  if (!req.session || !req.session.user) {
     res.sendStatus(401);
     return;
   }
