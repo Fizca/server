@@ -16,7 +16,9 @@
     },
     "session": {
         "max_age_millis": 86400000,
-        "secret": "abc"
+        "secret": "abc",
+        "sameSite": "none",
+        "secure": true
     },
     "aws": {
         "apiVersion": "2006-03-01",
