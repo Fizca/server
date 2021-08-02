@@ -8,8 +8,6 @@ const AuthUser = async (req, res, next) => {
     return;
   }
 
-  console.log(req.session);
-
   const { session: { user: { id } } } = req;
   const user = await User.findById(id);
   if (!user) {
