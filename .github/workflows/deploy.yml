@@ -1,0 +1,48 @@
+name: Deploy to Lambda
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write # required for AWS OIDC
+  contents: read
+
+env:
+  AWS_REGION: us-east-2
+  FUNCTION_NAME: fennec-backend
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Installs on Linux x64 so Sharp's native binary matches the Lambda runtime.
+      # --production skips devDeps (smaller zip); non-frozen so the correct platform binary resolves.
+      - name: Install dependencies
+        run: yarn install --production
+
+      - name: Package
+        run: |
+          chmod +x run.sh
+          zip -qr function.zip . \
+            -x '.git/*' '.github/*' '*.md' 'uploads/*'
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name "$FUNCTION_NAME" \
+            --zip-file fileb://function.zip \
+            --publish
