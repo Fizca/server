@@ -22,8 +22,10 @@ class AssetHandler {
     const {
       width, height, fit, format,
     } = options;
+    // Modern Sharp expects 'jpeg', not 'jpg'.
+    const outFormat = format === 'jpg' ? 'jpeg' : format;
     return Sharp(filepath)
-      .toFormat(format)
+      .toFormat(outFormat)
       .rotate()
       .resize({ width, height, fit })
       .toBuffer()

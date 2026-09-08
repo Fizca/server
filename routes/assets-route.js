@@ -10,7 +10,8 @@ const User = require('../models/user');
 const Tag = require('../models/tag');
 const Timeline = require('../models/timeline');
 
-const upload = multer({ dest: 'uploads/' });
+// Lambda's only writable directory is /tmp.
+const upload = multer({ dest: '/tmp' });
 const LIMIT = 10;
 
 const router = express.Router();

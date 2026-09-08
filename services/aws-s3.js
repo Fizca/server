@@ -11,16 +11,22 @@ const FileType = require('file-type');
  */
 class AWSS3 {
   constructor() {
-    // Amazon SES configuration
-    // current version of Amazon S3 API (see: https://docs.aws.amazon.com/AmazonS3/latest/API/Welcome.html)
     this.awsConfig = config.aws;
 
-    this.s3 = new AWS.S3(this.awsConfig);
+    // On Lambda, credentials come from the execution role - do NOT pass empty
+    // accessKeyId/secretAccessKey (that breaks signing). Pass only region + apiVersion.
+    const { apiVersion, region } = this.awsConfig;
+    this.s3 = new AWS.S3({
+      apiVersion,
+      region: region || process.env.AWS_REGION,
+      signatureVersion: 'v4',
+    });
 
-    this.signer = new AWS.CloudFront.Signer(
-      config.cloudfront.keyPairId,
-      config.cloudfront.privateKey,
-    );
+    // Only build the CloudFront signer when real keys exist (avoids a startup crash on empty config).
+    const { keyPairId, privateKey } = config.cloudfront || {};
+    this.signer = keyPairId && privateKey
+      ? new AWS.CloudFront.Signer(keyPairId, privateKey)
+      : null;
   }
 
   /**
@@ -35,14 +41,6 @@ class AWSS3 {
    * @return
    */
   async putObject(buffer, name) {
-    // Response block.
-    const { bucket_name: bucketName, region } = this.awsConfig;
-    const res = {
-      name,
-      filepath: `https://${bucketName}.s3-${region}.amazonaws.com/${name}`,
-      data: [],
-    };
-
     const { mime } = await FileType.fromBuffer(buffer);
     const params = {
       Body: buffer,
@@ -51,13 +49,7 @@ class AWSS3 {
       ContentType: mime,
     };
 
-    return this.s3.putObject(params, (e, d) => {
-      if (e) {
-        throw e;
-      }
-      res.data.push(d);
-      return res;
-    });
+    return this.s3.putObject(params).promise();
   }
 
   /**
@@ -105,6 +97,10 @@ class AWSS3 {
    * @returns
    */
   generateCookies() {
+    if (!this.signer) {
+      throw new Error('CloudFront signer is not configured');
+    }
+
     const { cloudfront: { cfUrl, ttl } } = config;
 
     const policy = {
