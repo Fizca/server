@@ -1,11 +1,11 @@
-require('./services/database');
-
 const config = require('config');
 const connectMongo = require('connect-mongo');
 const cors = require('cors');
 const express = require('express');
 const mongoose = require('mongoose');
 const session = require('express-session');
+
+const { connectDatabase } = require('./services/database');
 
 const assetsRoute = require('./routes/assets-route');
 const authRoute = require('./routes/auth-route');
@@ -17,6 +17,8 @@ const vitalsRoute = require('./routes/vitals-route');
 
 const app = express();
 const MongoStore = connectMongo(session);
+
+app.set('trust proxy', true);
 
 mongoose.set('useCreateIndex', true);
 
@@ -70,7 +72,12 @@ app.get('/', async (req, res) => {
 /**
  * Startup
  */
-const port = process.env.PORT || config.port;
-app.listen(port, () => {
-  console.log(`Express server is running on port: ${port}...`);
-});
+async function start() {
+  await connectDatabase();
+  const port = process.env.PORT || config.port;
+  app.listen(port, () => {
+    console.log(`Express server is running on port: ${port}...`);
+  });
+}
+
+module.exports = { app, start };

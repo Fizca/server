@@ -38,7 +38,8 @@ async function loadConfig() {
 loadConfig()
   .then(() => {
     // eslint-disable-next-line global-require
-    require('./app.js');
+    const { start } = require('./app');
+    return start();
   })
   .catch((err) => {
     console.error('Failed to load SSM config:', err);
