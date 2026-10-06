@@ -23,62 +23,67 @@ router.use(AuthUser);
 const uploadFields = upload.fields([
   { name: 'image', maxCount: 1 },
 ]);
-router.post('', AuthRole('contributor'), uploadFields, async (req, res) => {
+router.post('', AuthRole('contributor'), uploadFields, async (req, res, next) => {
   const { files: { image } } = req;
-  const { profile, tags = [], moment } = req.body;
-
-  const user = await User.findById(req.user.id);
-
-  // Preprocess the file data
   const [{ originalname, path: filepath }] = image;
-  const metadata = await AssetHandler.ExtractMetadata(filepath);
-  const name = AssetHandler.HashFileName(originalname, user.id);
 
-  // Iterate through all the options, generate the resized images
-  // and upload each image to S3
-  const assetConfigs = config.assets;
-  const promises = assetConfigs.map(async (options) => {
-    const { bucket } = options;
-    const buffer = await AssetHandler.Resizer(filepath, options);
-    return S3.putObject(buffer, `${bucket}/${name}`);
-  });
-  await Promise.all(promises);
-  console.log(`Successfully uploaded image: ${name}`);
+  try {
+    const { profile, tags = [], moment } = req.body;
 
-  // Clean up
-  fs.unlink(filepath, (err) => {
-    if (err) {
-      console.log(`Unable to delete ${filepath}`);
-    }
-  });
+    const user = await User.findById(req.user.id);
 
-  // Process the tags
-  const tagObjs = await Tag.Upsert(tags, profile);
+    // Preprocess the file data
+    const metadata = await AssetHandler.ExtractMetadata(filepath);
+    const name = AssetHandler.HashFileName(originalname, user.id);
 
-  // Create and save the asset
-  const asset = new Asset({
-    name,
-    type: 'image',
-    user,
-    profile,
-    moment,
-    takenAt: metadata.createdAt || Date.now(),
-    metadata: {
-      latitude: metadata.latitude,
-      longitude: metadata.longitude,
-    },
-    tags: tagObjs,
-  });
-  await asset.save();
+    // Iterate through all the options, generate the resized images
+    // and upload each image to S3
+    const assetConfigs = config.assets;
+    const promises = assetConfigs.map(async (options) => {
+      const { bucket } = options;
+      const buffer = await AssetHandler.Resizer(filepath, options);
+      return S3.putObject(buffer, `${bucket}/${name}`);
+    });
+    await Promise.all(promises);
+    console.log(`Successfully uploaded image: ${name}`);
 
-  Timeline.create({
-    profile,
-    asset,
-    tags: tagObjs,
-    takenAt: asset.takenAt,
-  });
+    // Process the tags
+    const tagObjs = await Tag.Upsert(tags, profile);
 
-  res.json(asset);
+    // Create and save the asset
+    const asset = new Asset({
+      name,
+      type: 'image',
+      user,
+      profile,
+      moment,
+      takenAt: metadata.createdAt || Date.now(),
+      metadata: {
+        latitude: metadata.latitude,
+        longitude: metadata.longitude,
+      },
+      tags: tagObjs,
+    });
+    await asset.save();
+
+    Timeline.create({
+      profile,
+      asset,
+      tags: tagObjs,
+      takenAt: asset.takenAt,
+    });
+
+    res.json(asset);
+  } catch (err) {
+    next(err);
+  } finally {
+    // Lambda's /tmp is size-capped and shared across warm invocations; always remove the upload.
+    fs.unlink(filepath, (unlinkErr) => {
+      if (unlinkErr) {
+        console.log(`Unable to delete ${filepath}`);
+      }
+    });
+  }
 });
 
 /**
@@ -154,7 +159,11 @@ router.get('/:size/:key', AuthRole('guest'), async (req, res) => {
   const { size, key } = req.params;
 
   S3.getObject(`${size}/${key}`, (err, data) => {
-    if (err) throw err;
+    if (err) {
+      console.error(`Failed to fetch S3 object ${size}/${key}:`, err.message);
+      res.sendStatus(500);
+      return;
+    }
 
     res.writeHead(200, { 'Content-Type': data.ContentType });
     res.write(data.Body, 'binary');
