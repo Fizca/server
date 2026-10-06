@@ -2,7 +2,7 @@
 
 const yargs = require('yargs');
 
-const db = require('../services/database');
+const { database, connectDatabase } = require('../services/database');
 const Profile = require('../models/profile');
 
 const args = yargs
@@ -35,6 +35,8 @@ const args = yargs
   .argv;
 
 const createProfile = async (options) => {
+  await connectDatabase();
+
   const profile = {
     name: options.n,
     birthday: new Date(options.b),
@@ -47,7 +49,7 @@ const createProfile = async (options) => {
       console.error(e.message);
     });
 
-  db.close();
+  database.close();
 };
 
 createProfile(args);

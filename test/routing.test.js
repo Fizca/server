@@ -1,6 +1,8 @@
 /* eslint-env jest */
 const request = require('supertest');
 const mongoose = require('mongoose');
+const signature = require('cookie-signature');
+const config = require('config');
 const { app } = require('../app');
 
 // readyState is a prototype getter; override it directly per-test so jest.spyOn's
@@ -37,6 +39,18 @@ describe('routing under /api', () => {
   it('reports degraded (503) when the DB is disconnected', async () => {
     setReadyState(0);
     const res = await request(app).get('/api/health');
+    expect(res.status).toBe(503);
+    expect(res.body).toEqual({ status: 'degraded', db: 'disconnected' });
+  });
+
+  it('reports 503 (not 500) for a cookie-bearing probe while the DB is down', async () => {
+    setReadyState(0);
+    // A valid signed session cookie would make express-session hit the mongo-backed
+    // store; health must not depend on that store to report DB health.
+    const signed = `s:${signature.sign('probe-sid', config.session.secret)}`;
+    const res = await request(app)
+      .get('/api/health')
+      .set('Cookie', `connect.sid=${encodeURIComponent(signed)}`);
     expect(res.status).toBe(503);
     expect(res.body).toEqual({ status: 'degraded', db: 'disconnected' });
   });

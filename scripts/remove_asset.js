@@ -3,7 +3,7 @@
 const yargs = require('yargs');
 const config = require('config');
 
-const db = require('../services/database');
+const { database, connectDatabase } = require('../services/database');
 const S3 = require('../services/aws-s3');
 const Asset = require('../models/asset');
 const Timeline = require('../models/timeline');
@@ -22,6 +22,8 @@ const args = yargs
   .argv;
 
 const removeAsset = async (options) => {
+  await connectDatabase();
+
   const asset = await Asset.findOne({ name: options.name });
 
   await Asset.findByIdAndDelete(asset.id);
@@ -32,7 +34,7 @@ const removeAsset = async (options) => {
   const promises = assetConfigs.map(async (assetOptions) => {
     const { bucket } = assetOptions;
     const key = `${bucket}/${options.name}`;
-    return S3.removeObject(key, (err, data) => {
+    return S3.removeObject(key, (err) => {
       if (err) {
         console.error(`Unable to remove ${key}`);
         console.error(err);
@@ -44,7 +46,7 @@ const removeAsset = async (options) => {
   await Promise.all(promises);
 
   console.log('Successfully deleted:', asset.id);
-  db.close();
+  database.close();
 };
 
 removeAsset(args);

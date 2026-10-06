@@ -2,7 +2,7 @@
 
 const yargs = require('yargs');
 
-const db = require('../services/database');
+const { database, connectDatabase } = require('../services/database');
 const User = require('../models/user');
 const { UserRoles } = require('../services/user-roles');
 
@@ -29,6 +29,8 @@ const args = yargs
   .argv;
 
 const inviteUser = async (options) => {
+  await connectDatabase();
+
   const user = {
     'google.email': options.e,
     method: 'google',
@@ -40,7 +42,7 @@ const inviteUser = async (options) => {
       console.error(e.message);
     });
 
-  db.close();
+  database.close();
 };
 
 inviteUser(args);

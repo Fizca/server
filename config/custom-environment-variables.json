@@ -1,5 +1,7 @@
 {
-    "session_secret": "SESSION_SECRET",
+    "session": {
+        "secret": "SESSION_SECRET"
+    },
     "port": "PORT",
     "oauth": {
         "google": {

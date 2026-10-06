@@ -22,6 +22,18 @@ app.set('trust proxy', true);
 
 mongoose.set('useCreateIndex', true);
 
+// Same-origin health check reached by the SPA through the Cloudflare proxy.
+// Registered before the session middleware so it never touches the mongo-backed
+// store: a DB outage must report a clean 503, not hang on the store lookup.
+app.get('/api/health', (req, res) => {
+  const connected = mongoose.connection.readyState === 1;
+  if (connected) {
+    res.status(200).json({ status: 'ok', db: 'connected' });
+  } else {
+    res.status(503).json({ status: 'degraded', db: 'disconnected' });
+  }
+});
+
 /**
  * Middleware
  */
@@ -63,16 +75,6 @@ apiRouter.use('/profiles', profilesRoute);
 apiRouter.use('/tags', tagsRoute);
 apiRouter.use('/users', usersRoute);
 apiRouter.use('/vitals', vitalsRoute);
-
-// Same-origin health check reached by the SPA through the Cloudflare proxy.
-apiRouter.get('/health', (req, res) => {
-  const connected = mongoose.connection.readyState === 1;
-  if (connected) {
-    res.status(200).json({ status: 'ok', db: 'connected' });
-  } else {
-    res.status(503).json({ status: 'degraded', db: 'disconnected' });
-  }
-});
 
 app.use('/api', apiRouter);
 
