@@ -4,7 +4,7 @@
   "description": "Server component for the application",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "start": "node app.js",
     "startd": "nodemon app.js",
     "user:invite": "node ./scripts/invite_user.js",
@@ -43,6 +43,8 @@
     "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.1.0",
     "eslint-plugin-import": "^2.20.2",
-    "nodemon": "^2.0.3"
+    "jest": "^30.5.2",
+    "nodemon": "^2.0.3",
+    "supertest": "^7.3.1"
   }
 }
