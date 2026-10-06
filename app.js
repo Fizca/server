@@ -54,13 +54,27 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-app.use('/assets', assetsRoute);
-app.use('/auth', authRoute);
-app.use('/moments', momentsRoute);
-app.use('/profiles', profilesRoute);
-app.use('/tags', tagsRoute);
-app.use('/users', usersRoute);
-app.use('/vitals', vitalsRoute);
+const apiRouter = express.Router();
+
+apiRouter.use('/assets', assetsRoute);
+apiRouter.use('/auth', authRoute);
+apiRouter.use('/moments', momentsRoute);
+apiRouter.use('/profiles', profilesRoute);
+apiRouter.use('/tags', tagsRoute);
+apiRouter.use('/users', usersRoute);
+apiRouter.use('/vitals', vitalsRoute);
+
+// Same-origin health check reached by the SPA through the Cloudflare proxy.
+apiRouter.get('/health', (req, res) => {
+  const connected = mongoose.connection.readyState === 1;
+  if (connected) {
+    res.status(200).json({ status: 'ok', db: 'connected' });
+  } else {
+    res.status(503).json({ status: 'degraded', db: 'disconnected' });
+  }
+});
+
+app.use('/api', apiRouter);
 
 /**
  * Routes
