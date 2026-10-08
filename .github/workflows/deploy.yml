@@ -45,7 +45,10 @@ jobs:
                --image-ids imageTag="$GITHUB_SHA" >/dev/null 2>&1; then
             echo "Image $IMAGE already exists; skipping build."
           else
-            docker buildx build --platform linux/amd64 -t "$IMAGE" --push .
+            # --provenance=false --sbom=false: buildx's docker-container driver
+            # attaches attestations by default, producing an OCI image index that
+            # Lambda rejects. Push a single image manifest instead.
+            docker buildx build --platform linux/amd64 --provenance=false --sbom=false -t "$IMAGE" --push .
           fi
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
 

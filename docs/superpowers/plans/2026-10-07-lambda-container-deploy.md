@@ -199,7 +199,9 @@ resource "aws_lambda_function" "backend" {
 }
 ```
 
-This removes the `data "archive_file" "lambda"` block, the `filename`/`source_code_hash` zip wiring, `runtime`, `handler`, the LWA `layers` list, and the `AWS_LAMBDA_EXEC_WRAPPER` env var. The LWA is now baked into the image at `/opt/extensions/`. The `aws_lambda_permission.apigw_invoke` in `apigateway.tf` references `function_name` (name is stable across the recreate) and `depends_on` is preserved, so API Gateway keeps working after the recreate.
+This removes the `data "archive_file" "lambda"` block, the `filename`/`source_code_hash` zip wiring, `runtime`, `handler`, the LWA `layers` list, and the `AWS_LAMBDA_EXEC_WRAPPER` env var. The LWA is now baked into the image at `/opt/extensions/`.
+
+Note on the API Gateway invoke permission: `aws_lambda_permission.apigw_invoke` references the stable function *name*, so a `package_type` ForceNew replacement does NOT otherwise re-trigger it, and the resource-based policy dies with the old function, breaking the API with no auto-recovery. This is handled by a `replace_triggered_by = [aws_lambda_function.backend.id]` lifecycle block on that permission in `apigateway.tf` (added during review), which recreates the permission whenever the function is replaced.
 
 - [ ] **Step 2: Format and validate**
 
@@ -516,7 +518,9 @@ ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
 REGISTRY="$ACCOUNT.dkr.ecr.us-east-2.amazonaws.com"
 aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin "$REGISTRY"
 SHA=$(git rev-parse HEAD)
-docker buildx build --platform linux/amd64 -t "$REGISTRY/fennec-backend:$SHA" --push .
+# --provenance=false --sbom=false: avoid buildx attestations that produce an
+# image index Lambda rejects. Must match the CI build in deploy.yml.
+docker buildx build --platform linux/amd64 --provenance=false --sbom=false -t "$REGISTRY/fennec-backend:$SHA" --push .
 echo "Seed tag: $SHA"
 ```
 
