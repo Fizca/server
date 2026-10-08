@@ -88,12 +88,16 @@ app.get('/', async (req, res) => {
 /**
  * Startup
  */
-async function start() {
-  await connectDatabase();
+function start() {
   const port = process.env.PORT || config.port;
-  app.listen(port, () => {
+  const server = app.listen(port, () => {
     console.log(`Express server is running on port: ${port}...`);
   });
+  // Connect in the background so the server is ready for the Lambda Web Adapter
+  // immediately. connectDatabase retries until the DB is reachable; /api/health
+  // reports the degraded window.
+  connectDatabase();
+  return server;
 }
 
 module.exports = { app, start };

@@ -20,4 +20,19 @@ describe('connectDatabase', () => {
       bufferCommands: false,
     });
   });
+
+  it('retries the connection in the background after an initial failure', async () => {
+    jest.useFakeTimers();
+    try {
+      const spy = jest.spyOn(mongoose, 'connect')
+        .mockRejectedValueOnce(new Error('temporary failure'))
+        .mockResolvedValueOnce();
+      await connectDatabase();
+      expect(spy).toHaveBeenCalledTimes(1);
+      await jest.advanceTimersByTimeAsync(5000);
+      expect(spy).toHaveBeenCalledTimes(2);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });
