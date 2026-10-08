@@ -1,0 +1,36 @@
+# Local full stack: the Lambda image plus a Mongo instance. Proves the image
+# builds, boots, serves HTTP on 8080, and talks to Mongo end to end.
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Match the Lambda runtime arch. On Apple Silicon this runs under emulation.
+    platform: linux/amd64
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      MONGO_URL: "mongodb://mongo/app"
+      SESSION_SECRET: "local-dev-secret"
+      CORS_WHITELIST: "http://localhost:3001"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+volumes:
+  mongo_data:

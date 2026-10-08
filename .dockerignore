@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log
+yarn-error.log
+.git
+.github
+.gitignore
+*.md
+LICENSE
+uploads
+test
+.eslintrc.json
+.dockerignore
+Dockerfile
+docker-compose.yml
+.env
+.env.*

@@ -133,3 +133,42 @@ The port can be changed overriding the `local.json` file,
 however, any client will also need to be updated.
 
 To test that things are running correctly, navigate to your [local oath link](localhost:3001/google/oauth) and after you select an account, you should see a log in your yarn console that your account was created.
+
+# Container image
+
+The service ships to Lambda as a container image. The image honors a single
+contract: it runs the Express app as an HTTP server on port 8080, with the
+[Lambda Web Adapter](https://github.com/awslabs/aws-lambda-web-adapter) baked
+in as an extension. The adapter is dormant when run outside Lambda, so the same
+image works locally and in production. Because the contract is the image, not
+the language, a future rewrite (for example Go) is a drop-in swap: build a new
+image that serves HTTP on 8080 and the Lambda infra stays the same.
+
+The image targets `linux/amd64` to match the x86_64 Lambda runtime. On Apple
+Silicon the build runs under emulation, which is slower but produces the correct
+binary. Dependencies install from the committed `yarn.lock`.
+
+## Local stack
+
+`docker-compose.yml` runs the image alongside a Mongo container.
+
+```bash
+docker compose up --build
+```
+
+Verify the stack is healthy:
+
+```bash
+curl http://localhost:8080/api/health
+# {"status":"ok","db":"connected"}
+```
+
+Note: the session cookie is configured `secure: true` and `sameSite: none`,
+which browsers only honor over HTTPS. Health checks and header-based calls work
+over plain HTTP locally, but browser cookie login will not set a cookie on
+`http://localhost`.
+
+## Deploying
+
+Pushing the image to ECR and switching the Lambda to image-based packaging is
+tracked as a separate change. It is not wired here.
