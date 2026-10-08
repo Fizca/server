@@ -10,7 +10,6 @@ uploads
 test
 .eslintrc.json
 .dockerignore
-Dockerfile
 docker-compose.yml
 .env
 .env.*

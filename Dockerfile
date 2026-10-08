@@ -5,17 +5,19 @@
 # image (another language) that honors the same contract is a drop-in swap, so
 # the Lambda infra never changes. See README "Container image".
 
-# Build target is the Lambda runtime architecture (x86_64), pinned so the image
-# is identical regardless of the build host. On arm64 hosts (Apple Silicon) this
-# builds under emulation: correct result, slower build.
-FROM --platform=linux/amd64 node:22-bookworm-slim AS deps
+# Target platform (linux/amd64, matching the x86_64 Lambda runtime) is set by the
+# build command: --platform in the CI and seed builds, and `platform:` in
+# docker-compose.yml. It is deliberately NOT pinned in FROM: BuildKit lints
+# against a constant --platform there, and it would break multi-arch builds. On
+# arm64 hosts the amd64 build runs under emulation (correct, slower).
+FROM node:22-bookworm-slim AS deps
 WORKDIR /app
 
 # Manifest and lockfile first so dependency layers cache across code-only changes.
 COPY package.json yarn.lock ./
 RUN yarn install --production --frozen-lockfile && yarn cache clean
 
-FROM --platform=linux/amd64 node:22-bookworm-slim AS runtime
+FROM node:22-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production \
     PORT=8080
